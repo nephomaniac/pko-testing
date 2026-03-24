@@ -165,6 +165,13 @@ EOF
     [ -n "$MIGRATION_MODE" ] && echo "MIGRATION_MODE=$MIGRATION_MODE" >> "$runtime_state"
     [ -n "$OLM_CLEANUP_METHOD" ] && echo "OLM_CLEANUP_METHOD=$OLM_CLEANUP_METHOD" >> "$runtime_state"
     [ -n "$HIVE_PAUSED" ] && echo "HIVE_PAUSED=$HIVE_PAUSED" >> "$runtime_state"
+    [ -n "$PHASE4_TIMESTAMP" ] && echo "PHASE4_TIMESTAMP=$PHASE4_TIMESTAMP" >> "$runtime_state"
+    [ -n "$PHASE4_HAS_SUBSCRIPTION" ] && echo "PHASE4_HAS_SUBSCRIPTION=$PHASE4_HAS_SUBSCRIPTION" >> "$runtime_state"
+    [ -n "$PHASE4_HAS_CSV" ] && echo "PHASE4_HAS_CSV=$PHASE4_HAS_CSV" >> "$runtime_state"
+    [ -n "$PHASE4_CSV_VERSION" ] && echo "PHASE4_CSV_VERSION=$PHASE4_CSV_VERSION" >> "$runtime_state"
+    [ -n "$PHASE4_HAS_CATALOGSOURCE" ] && echo "PHASE4_HAS_CATALOGSOURCE=$PHASE4_HAS_CATALOGSOURCE" >> "$runtime_state"
+    [ -n "$PHASE4_HAS_DEPLOYMENT" ] && echo "PHASE4_HAS_DEPLOYMENT=$PHASE4_HAS_DEPLOYMENT" >> "$runtime_state"
+    [ -n "$PHASE4_DEPLOYMENT_REPLICAS" ] && echo "PHASE4_DEPLOYMENT_REPLICAS=$PHASE4_DEPLOYMENT_REPLICAS" >> "$runtime_state"
 
     cat >> "$runtime_state" << EOF
 

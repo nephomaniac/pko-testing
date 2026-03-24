@@ -118,27 +118,41 @@ echo
 echo "===================================="
 echo "Step 1.1: Building Operator Image"
 echo "===================================="
-echo "Command: GOOS=linux GOARCH=amd64 ALLOW_DIRTY_CHECKOUT=true IMAGE_REPOSITORY=$IMAGE_REPOSITORY CONTAINER_ENGINE=podman make docker-build"
+
+# Build operator image with platform flag
+# Note: Modified Dockerfile accepts TARGETPLATFORM arg and uses --platform flag
+echo "Building for linux/amd64 architecture"
+echo "Command: podman build --platform linux/amd64 --pull -f build/Dockerfile -t <image> ."
 echo
 
-GOOS=linux GOARCH=amd64 ALLOW_DIRTY_CHECKOUT=true \
-  IMAGE_REPOSITORY="$IMAGE_REPOSITORY" \
-  CONTAINER_ENGINE=podman \
-  make docker-build
+# Get the version-tagged image name that make would use
+OPERATOR_VERSION_TAG="v0.1.823-g$CURRENT_COMMIT"
+OPERATOR_IMAGE_VERSIONED="$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$OPERATOR_VERSION_TAG"
+
+# Build with explicit platform flag (Dockerfile now supports this via ARG TARGETPLATFORM)
+podman build --platform linux/amd64 --pull \
+  -f build/Dockerfile \
+  -t "$OPERATOR_IMAGE_VERSIONED" \
+  .
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Operator image build failed"
     exit 1
 fi
 
-# Get the actual image name that was built (it includes version)
-BUILT_IMAGE=$(podman images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_REPOSITORY/$IMAGE_NAME" | grep -v "pko" | head -1)
-echo
-echo "Built operator image: $BUILT_IMAGE"
+# Tag with standard tags
+podman tag "$OPERATOR_IMAGE_VERSIONED" "$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
+podman tag "$OPERATOR_IMAGE_VERSIONED" "$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:latest"
 
-# Tag it with our test tag
-echo "Tagging as: $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
-podman tag "$BUILT_IMAGE" "$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
+if [ $? -ne 0 ]; then
+    echo "ERROR: Operator image build failed"
+    exit 1
+fi
+
+echo
+echo "✓ Built operator image: $OPERATOR_IMAGE_VERSIONED"
+echo "✓ Tagged as: $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
+echo "✓ Tagged as: $IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:latest"
 
 echo
 echo "===================================="

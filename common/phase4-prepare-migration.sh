@@ -194,13 +194,24 @@ if [ "$MODE_CHOICE" = "1" ]; then
         exit 0
     fi
 
-    # Save mode to runtime state
-    MIGRATION_MODE=1
-    OLM_CLEANUP_METHOD=pko-managed
+    # Export variables for runtime state tracking
+    export MIGRATION_MODE=1
+    export OLM_CLEANUP_METHOD=pko-managed
+    export PHASE4_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    # Export OLM state at time of phase4
+    export PHASE4_HAS_SUBSCRIPTION="$HAS_SUBSCRIPTION"
+    export PHASE4_HAS_CSV="$HAS_CSV"
+    export PHASE4_CSV_VERSION="$CSV_VERSION"
+    export PHASE4_HAS_CATALOGSOURCE="$HAS_CATALOGSOURCE"
+    export PHASE4_HAS_DEPLOYMENT="$HAS_DEPLOYMENT"
+    export PHASE4_DEPLOYMENT_REPLICAS="$REPLICAS"
+
+    # Save runtime state
     save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
 
     echo
-    echo "Configuration saved."
+    echo "✓ Configuration saved."
     echo "Proceeding to Phase 5 (PKO deployment with OLM resources present)..."
     echo
     echo "Next step: Run phase5-deploy-pko.sh"

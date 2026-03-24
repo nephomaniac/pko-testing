@@ -67,6 +67,13 @@ PKO_IMAGE_SUFFIX=-pko
 CLUSTERPACKAGE_TEMPLATE_PATH=hack/pko/clusterpackage.yaml
 
 # ============================================================================
+# CRD Configuration
+# ============================================================================
+
+# Custom Resource Definition managed by this operator
+OPERATOR_CRD=alertmanagers.managed.openshift.io
+
+# ============================================================================
 # Notes
 # ============================================================================
 # - This file is operator-specific and should be customized for each operator

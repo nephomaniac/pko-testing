@@ -46,7 +46,7 @@ echo "Step 6.1: Check ClusterPackage Exists"
 echo "===================================="
 echo
 
-if ! oc get clusterpackage configure-alertmanager-operator &>/dev/null; then
+if ! oc get clusterpackage "$CLUSTERPACKAGE_NAME" &>/dev/null; then
     echo "ERROR: ClusterPackage not found"
     echo "Please run phase5-deploy-pko.sh first"
     exit 1
@@ -72,17 +72,17 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
     echo "--- Status at $(date) (${ELAPSED}s elapsed) ---"
 
     # Get ClusterPackage status
-    CP_STATUS=$(oc get clusterpackage configure-alertmanager-operator -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    CP_STATUS=$(oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
     echo "ClusterPackage Phase: $CP_STATUS"
 
     # Get current phase being processed
-    CURRENT_PHASE=$(oc get clusterpackage configure-alertmanager-operator -o jsonpath='{.status.activePhase}' 2>/dev/null || echo "")
+    CURRENT_PHASE=$(oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o jsonpath='{.status.activePhase}' 2>/dev/null || echo "")
     if [ -n "$CURRENT_PHASE" ]; then
         echo "Active Phase: $CURRENT_PHASE"
     fi
 
     # Check for conditions
-    CONDITIONS=$(oc get clusterpackage configure-alertmanager-operator -o jsonpath='{.status.conditions[*].type}' 2>/dev/null || echo "")
+    CONDITIONS=$(oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o jsonpath='{.status.conditions[*].type}' 2>/dev/null || echo "")
     if [ -n "$CONDITIONS" ]; then
         echo "Conditions: $CONDITIONS"
     fi
@@ -100,7 +100,7 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
         echo "❌ ClusterPackage deployment failed!"
         echo
         echo "Full status:"
-        oc get clusterpackage configure-alertmanager-operator -o yaml
+        oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o yaml
         exit 1
     fi
 
@@ -115,7 +115,7 @@ if [ $ELAPSED -ge $MAX_WAIT ]; then
     read -p "Continue to validation anyway? (y/n): " CONTINUE
     if [ "$CONTINUE" != "y" ]; then
         echo "Aborted. Check ClusterPackage status manually:"
-        echo "  oc get clusterpackage configure-alertmanager-operator -o yaml"
+        echo "  oc get clusterpackage $CLUSTERPACKAGE_NAME -o yaml"
         exit 1
     fi
 fi
@@ -134,14 +134,14 @@ if [ "$MIGRATION_MODE" = "1" ]; then
     # Check that OLM resources are gone
     OLM_CLEANUP_SUCCESS=true
 
-    if oc get subscription configure-alertmanager-operator -n openshift-monitoring &>/dev/null; then
+    if oc get subscription "$SUBSCRIPTION_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
         echo "❌ FAIL: Subscription still exists (should be removed by cleanup-deploy phase)"
         OLM_CLEANUP_SUCCESS=false
     else
         echo "✓ Subscription removed by PKO cleanup"
     fi
 
-    CSV_NAME=$(oc get csv -n openshift-monitoring -o name 2>/dev/null | grep configure-alertmanager | head -1)
+    CSV_NAME=$(oc get csv -n "$OPERATOR_NAMESPACE" -o name 2>/dev/null | grep "$CSV_NAME_PATTERN" | head -1)
     if [ -n "$CSV_NAME" ]; then
         echo "❌ FAIL: CSV still exists: $CSV_NAME (should be removed by cleanup-deploy phase)"
         OLM_CLEANUP_SUCCESS=false
@@ -149,7 +149,7 @@ if [ "$MIGRATION_MODE" = "1" ]; then
         echo "✓ CSV removed by PKO cleanup"
     fi
 
-    if oc get catalogsource configure-alertmanager-operator-registry -n openshift-monitoring &>/dev/null; then
+    if oc get catalogsource "$CATALOGSOURCE_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
         echo "❌ FAIL: CatalogSource still exists (should be removed by cleanup-deploy phase)"
         OLM_CLEANUP_SUCCESS=false
     else
@@ -165,7 +165,7 @@ if [ "$MIGRATION_MODE" = "1" ]; then
         echo "This indicates a problem with the PKO package's cleanup phases."
         echo
         echo "Check the ClusterPackage for cleanup phase status:"
-        echo "  oc get clusterpackage configure-alertmanager-operator -o yaml"
+        echo "  oc get clusterpackage $CLUSTERPACKAGE_NAME -o yaml"
         echo
         echo "Manual cleanup option:"
         echo "  Run: ../common/cleanup-olm.sh"
@@ -189,9 +189,9 @@ elif [ "$MIGRATION_MODE" = "2" ]; then
     echo
 
     # Just verify they're still gone
-    if oc get subscription configure-alertmanager-operator -n openshift-monitoring &>/dev/null || \
-       oc get csv -n openshift-monitoring -o name 2>/dev/null | grep -q configure-alertmanager || \
-       oc get catalogsource configure-alertmanager-operator-registry -n openshift-monitoring &>/dev/null; then
+    if oc get subscription "$SUBSCRIPTION_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null || \
+       oc get csv -n "$OPERATOR_NAMESPACE" -o name 2>/dev/null | grep -q "$CSV_NAME_PATTERN" || \
+       oc get catalogsource "$CATALOGSOURCE_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
         echo "⚠️  WARNING: OLM resources have reappeared (Hive sync may be active)"
     else
         echo "✓ OLM resources remain removed"
@@ -209,9 +209,9 @@ echo "Checking PKO-deployed resources..."
 echo
 
 # Check Deployment
-if oc get deployment configure-alertmanager-operator -n openshift-monitoring &>/dev/null; then
-    REPLICAS=$(oc get deployment configure-alertmanager-operator -n openshift-monitoring -o jsonpath='{.spec.replicas}')
-    READY=$(oc get deployment configure-alertmanager-operator -n openshift-monitoring -o jsonpath='{.status.readyReplicas}')
+if oc get deployment "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
+    REPLICAS=$(oc get deployment "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE" -o jsonpath='{.spec.replicas}')
+    READY=$(oc get deployment "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE" -o jsonpath='{.status.readyReplicas}')
     echo "✓ Deployment exists (replicas: ${REPLICAS}, ready: ${READY:-0})"
 
     if [ "$READY" != "$REPLICAS" ]; then
@@ -222,38 +222,40 @@ else
 fi
 
 # Check ServiceAccount
-if oc get serviceaccount configure-alertmanager-operator -n openshift-monitoring &>/dev/null; then
+if oc get serviceaccount "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
     echo "✓ ServiceAccount exists"
 else
     echo "❌ ServiceAccount not found"
 fi
 
 # Check ClusterRole
-if oc get clusterrole configure-alertmanager-operator &>/dev/null; then
+if oc get clusterrole "$OPERATOR_NAME" &>/dev/null; then
     echo "✓ ClusterRole exists"
 else
     echo "❌ ClusterRole not found"
 fi
 
 # Check ClusterRoleBinding
-if oc get clusterrolebinding configure-alertmanager-operator &>/dev/null; then
+if oc get clusterrolebinding "$OPERATOR_NAME" &>/dev/null; then
     echo "✓ ClusterRoleBinding exists"
 else
     echo "❌ ClusterRoleBinding not found"
 fi
 
-# Check CRD
-if oc get crd alertmanagers.managed.openshift.io &>/dev/null; then
-    echo "✓ CRD (alertmanagers.managed.openshift.io) exists"
-else
-    echo "❌ CRD not found"
+# Check CRD (operator-specific, stored in operator-config)
+if [ -n "$OPERATOR_CRD" ]; then
+    if oc get crd "$OPERATOR_CRD" &>/dev/null; then
+        echo "✓ CRD ($OPERATOR_CRD) exists"
+    else
+        echo "❌ CRD not found"
+    fi
 fi
 
 # Check Pods
 echo
 echo "Operator pods:"
-oc get pods -n openshift-monitoring -l app.kubernetes.io/name=configure-alertmanager-operator 2>/dev/null || \
-oc get pods -n openshift-monitoring | grep configure-alertmanager || \
+oc get pods -n "$OPERATOR_NAMESPACE" -l app.kubernetes.io/name="$OPERATOR_NAME" 2>/dev/null || \
+oc get pods -n "$OPERATOR_NAMESPACE" | grep "$OPERATOR_RESOURCE_PREFIX" || \
 echo "  No pods found"
 
 echo
@@ -264,8 +266,8 @@ echo "===================================="
 echo
 
 echo "Final ClusterPackage status:"
-oc get clusterpackage configure-alertmanager-operator -o jsonpath='{.status}' | python3 -m json.tool || \
-oc get clusterpackage configure-alertmanager-operator -o yaml | grep -A50 "^status:"
+oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o jsonpath='{.status}' | python3 -m json.tool || \
+oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o yaml | grep -A50 "^status:"
 
 echo
 
@@ -274,7 +276,7 @@ echo "Deployment Monitoring Complete!"
 echo "===================================="
 echo
 
-DEPLOY_STATUS=$(oc get clusterpackage configure-alertmanager-operator -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+DEPLOY_STATUS=$(oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
 
 if [[ "$DEPLOY_STATUS" == "Available" ]]; then
     echo "✅ PKO Deployment: SUCCESS"
@@ -293,13 +295,24 @@ else
     echo "⚠️  PKO Deployment: Status is '$DEPLOY_STATUS' (not Available)"
     echo
     echo "Check ClusterPackage for details:"
-    echo "  oc describe clusterpackage configure-alertmanager-operator"
+    echo "  oc describe clusterpackage $CLUSTERPACKAGE_NAME"
     echo
     read -p "Proceed to functional tests anyway? (y/n): " CONTINUE
     if [ "$CONTINUE" != "y" ]; then
         exit 1
     fi
 fi
+
+# Export variables for runtime state tracking
+export DEPLOYMENT_STATUS="$DEPLOY_STATUS"
+if [ "$MIGRATION_MODE" = "1" ]; then
+    export OLM_CLEANUP_VALIDATED="${OLM_CLEANUP_SUCCESS:-unknown}"
+fi
+export PKO_RESOURCES_VALIDATED=true
+export VALIDATION_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+# Save runtime state
+save_runtime_state "$OPERATOR_DIR" "phase6-monitor-deployment" "success"
 
 echo
 echo "Phase 6 completed at: $(date)"

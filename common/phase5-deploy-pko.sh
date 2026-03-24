@@ -10,6 +10,21 @@ PHASE_NUM=5
 OPERATOR_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Parse command-line arguments
+AUTO_CONFIRM=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --auto-confirm)
+            AUTO_CONFIRM=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Setup logging
 LOG_DIR="$OPERATOR_DIR/logs"
 mkdir -p "$LOG_DIR"
@@ -17,7 +32,7 @@ LOG_FILE="$LOG_DIR/phase${PHASE_NUM}-$(date +%Y%m%d-%H%M%S).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "===================================="
-echo "Phase 5: Deploy CAMO via PKO"
+echo "Phase 5: Deploy ${OPERATOR_NAME} via PKO"
 echo "===================================="
 echo "Started at: $(date)"
 echo "Log file: $LOG_FILE"
@@ -61,18 +76,18 @@ OLM_SUB_EXISTS=false
 OLM_CSV_EXISTS=false
 OLM_CAT_EXISTS=false
 
-if oc get subscription configure-alertmanager-operator -n openshift-monitoring &>/dev/null; then
+if oc get subscription "$SUBSCRIPTION_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
     OLM_SUB_EXISTS=true
     echo "  - Subscription: EXISTS"
 fi
 
-CSV_NAME=$(oc get csv -n openshift-monitoring -o name 2>/dev/null | grep configure-alertmanager | head -1)
+CSV_NAME=$(oc get csv -n "$OPERATOR_NAMESPACE" -o name 2>/dev/null | grep "$CSV_NAME_PATTERN" | head -1)
 if [ -n "$CSV_NAME" ]; then
     OLM_CSV_EXISTS=true
     echo "  - CSV: EXISTS ($CSV_NAME)"
 fi
 
-if oc get catalogsource configure-alertmanager-operator-registry -n openshift-monitoring &>/dev/null; then
+if oc get catalogsource "$CATALOGSOURCE_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
     OLM_CAT_EXISTS=true
     echo "  - CatalogSource: EXISTS"
 fi
@@ -159,7 +174,7 @@ elif [ -n "$OME_REPO" ]; then
 fi
 
 # Check if we can use operator's ClusterPackage template
-TEMPLATE_PATH="$OPERATOR_REPO_PATH/hack/pko/clusterpackage.yaml"
+TEMPLATE_PATH="$OPERATOR_REPO_PATH/${CLUSTERPACKAGE_TEMPLATE_PATH}"
 if [ -n "$OPERATOR_REPO_PATH" ] && [ -f "$TEMPLATE_PATH" ]; then
     echo "Using operator's ClusterPackage template: $TEMPLATE_PATH"
     echo
@@ -198,7 +213,7 @@ else
 apiVersion: package-operator.run/v1alpha1
 kind: ClusterPackage
 metadata:
-  name: configure-alertmanager-operator
+  name: ${CLUSTERPACKAGE_NAME}
   annotations:
     package-operator.run/collision-protection: IfNoController
 spec:
@@ -225,12 +240,16 @@ elif [ "$MIGRATION_MODE" = "2" ]; then
     echo
 fi
 
-read -p "Deploy this ClusterPackage? (y/n): " CONFIRM
-if [ "$CONFIRM" != "y" ]; then
-    echo "Aborted."
-    echo "Manifest saved to: $MANIFEST_FILE"
-    echo "You can manually apply it later with: oc apply -f $MANIFEST_FILE"
-    exit 0
+if [ "$AUTO_CONFIRM" = false ]; then
+    read -p "Deploy this ClusterPackage? (y/n): " CONFIRM
+    if [ "$CONFIRM" != "y" ]; then
+        echo "Aborted."
+        echo "Manifest saved to: $MANIFEST_FILE"
+        echo "You can manually apply it later with: oc apply -f $MANIFEST_FILE"
+        exit 0
+    fi
+else
+    echo "Auto-confirm enabled, deploying ClusterPackage..."
 fi
 
 echo
@@ -242,27 +261,26 @@ echo
 
 # Record deployment start time
 DEPLOY_START_TIME=$(date +%s)
-CLUSTERPACKAGE_NAME=configure-alertmanager-operator
-CLUSTERPACKAGE_MANIFEST=$MANIFEST_FILE
 
 # Confirm with cluster context before applying
-if confirm_operation "APPLY CLUSTERPACKAGE" \
-    "oc apply -f $MANIFEST_FILE"; then
-
-    oc apply -f "$MANIFEST_FILE"
-
-    if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to create ClusterPackage"
-        exit 1
+if [ "$AUTO_CONFIRM" = false ]; then
+    if ! confirm_operation "APPLY CLUSTERPACKAGE" \
+        "oc apply -f $MANIFEST_FILE"; then
+        echo "Aborted."
+        echo "Manifest saved to: $MANIFEST_FILE"
+        echo "You can manually apply it later with: oc apply -f $MANIFEST_FILE"
+        exit 0
     fi
-
-    echo "✓ ClusterPackage created successfully"
-else
-    echo "Aborted."
-    echo "Manifest saved to: $MANIFEST_FILE"
-    echo "You can manually apply it later with: oc apply -f $MANIFEST_FILE"
-    exit 0
 fi
+
+oc apply -f "$MANIFEST_FILE"
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to create ClusterPackage"
+    exit 1
+fi
+
+echo "✓ ClusterPackage created successfully"
 
 echo
 
@@ -275,7 +293,7 @@ echo "Waiting 5 seconds for PKO to start processing..."
 sleep 5
 
 echo "ClusterPackage status:"
-oc get clusterpackage configure-alertmanager-operator -o yaml 2>/dev/null | grep -A10 "^status:" || echo "  No status yet"
+oc get clusterpackage "$CLUSTERPACKAGE_NAME" -o yaml 2>/dev/null | grep -A10 "^status:" || echo "  No status yet"
 
 echo
 
@@ -283,7 +301,7 @@ echo "===================================="
 echo "Deployment Initiated!"
 echo "===================================="
 echo
-echo "ClusterPackage created: configure-alertmanager-operator"
+echo "ClusterPackage created: $CLUSTERPACKAGE_NAME"
 echo "Manifest saved: $MANIFEST_FILE"
 echo "Deployment started at: $(date -r $DEPLOY_START_TIME)"
 echo
@@ -303,6 +321,10 @@ fi
 
 echo
 echo "Next step: Run phase6-monitor-deployment.sh to watch the deployment progress"
+
+# Export variables for runtime state tracking
+export DEPLOY_START_TIME="$(date -u -r $DEPLOY_START_TIME +"%Y-%m-%dT%H:%M:%SZ")"
+export CLUSTERPACKAGE_MANIFEST="$MANIFEST_FILE"
 
 # Save runtime state
 save_runtime_state "$OPERATOR_DIR" "phase5-deploy-pko" "success"
