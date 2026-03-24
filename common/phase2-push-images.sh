@@ -113,6 +113,14 @@ fi
 echo "✓ PKO package image pushed successfully"
 echo
 
+# Set environment variables for runtime state tracking
+export IMAGES_PUSHED=true
+export PUSH_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+export QUAY_REPOSITORY_OPERATOR="https://quay.io/repository/$IMAGE_REPOSITORY/$IMAGE_NAME"
+export QUAY_REPOSITORY_PKO="https://quay.io/repository/$IMAGE_REPOSITORY/${IMAGE_NAME}-pko"
+export IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
+export IMAGE_NAME="$IMAGE_NAME"
+
 # Save runtime state
 save_runtime_state "$OPERATOR_DIR" "phase2-push-images" "success"
 

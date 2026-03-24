@@ -81,6 +81,20 @@ EOF
     cat >> "$runtime_state" << EOF
 
 # ============================================================================
+# Push Information
+# ============================================================================
+EOF
+
+    # Save push variables
+    [ -n "$IMAGES_PUSHED" ] && echo "IMAGES_PUSHED=$IMAGES_PUSHED" >> "$runtime_state"
+    [ -n "$PUSH_TIMESTAMP" ] && echo "PUSH_TIMESTAMP=$PUSH_TIMESTAMP" >> "$runtime_state"
+    [ -n "$IMAGE_REPOSITORY" ] && echo "IMAGE_REPOSITORY=$IMAGE_REPOSITORY" >> "$runtime_state"
+    [ -n "$QUAY_REPOSITORY_OPERATOR" ] && echo "QUAY_REPOSITORY_OPERATOR=$QUAY_REPOSITORY_OPERATOR" >> "$runtime_state"
+    [ -n "$QUAY_REPOSITORY_PKO" ] && echo "QUAY_REPOSITORY_PKO=$QUAY_REPOSITORY_PKO" >> "$runtime_state"
+
+    cat >> "$runtime_state" << EOF
+
+# ============================================================================
 # Cluster Information
 # ============================================================================
 EOF
