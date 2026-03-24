@@ -80,21 +80,67 @@ echo
 
 if [ "$HAS_SUBSCRIPTION" = false ] && [ "$HAS_CSV" = false ] && [ "$HAS_CATALOGSOURCE" = false ]; then
     echo "ℹ️  No OLM resources found."
-    echo "This cluster may have already been migrated to PKO, or CAMO was never deployed."
+    echo "This cluster does not have an OLM-based operator deployment."
     echo
-    read -p "Continue to PKO deployment anyway? (y/n): " CONTINUE
-    if [ "$CONTINUE" != "y" ]; then
+    echo "Options:"
+    echo "  1) Install operator via OLM first (for Mode 1 testing)"
+    echo "     - Uses operator repo artifacts from deploy/"
+    echo "     - Creates mock OLM resources (Subscription, CSV, CatalogSource)"
+    echo "     - Deploys operator with your configured image"
+    echo "     - Then you can test PKO cleanup phases (Mode 1)"
+    echo
+    echo "  2) Skip to PKO deployment (Mode 2)"
+    echo "     - No OLM cleanup to test"
+    echo "     - PKO deploys operator directly"
+    echo
+    echo "  3) Abort"
+    echo
+    read -p "Choose option (1/2/3): " INSTALL_CHOICE
+
+    if [ "$INSTALL_CHOICE" = "1" ]; then
+        echo
+        echo "===================================="
+        echo "Installing Operator via OLM"
+        echo "===================================="
+        echo
+
+        # Check if operator repo is configured
+        if [ -z "$CAMO_REPO" ] && [ -z "$RMO_REPO" ] && [ -z "$OME_REPO" ]; then
+            echo "ERROR: No operator repository configured"
+            echo "Please set CAMO_REPO, RMO_REPO, or OME_REPO in user-config"
+            exit 1
+        fi
+
+        # Run OLM installation helper
+        if [ -f "$SCRIPT_DIR/install-via-olm.sh" ]; then
+            bash "$SCRIPT_DIR/install-via-olm.sh" "$OPERATOR_DIR"
+
+            echo
+            echo "OLM installation complete!"
+            echo
+            echo "Next steps:"
+            echo "  1. Verify operator is running: oc get pods -n $OPERATOR_NAMESPACE"
+            echo "  2. Re-run this script (phase4) and select Mode 1 (PKO cleanup)"
+            exit 0
+        else
+            echo "ERROR: install-via-olm.sh not found"
+            exit 1
+        fi
+
+    elif [ "$INSTALL_CHOICE" = "2" ]; then
+        # Save mode to runtime state
+        MIGRATION_MODE=2
+        OLM_CLEANUP_METHOD=none
+        save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
+        echo
+        echo "Proceeding to Phase 5 (PKO deployment)..."
+        echo "Next step: Run phase5-deploy-pko.sh"
+        exit 0
+
+    else
         echo "Aborted."
         exit 0
     fi
-    # Save mode to runtime state
-    MIGRATION_MODE=2
-    OLM_CLEANUP_METHOD=none
-    save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
-    echo
-    echo "Proceeding to Phase 5 (PKO deployment)..."
-    echo "Next step: Run phase5-deploy-pko.sh"
-    exit 0
 fi
 
 echo "===================================="

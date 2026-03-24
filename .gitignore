@@ -23,5 +23,6 @@
 *.log
 login.sh
 
-# Cluster-specific manifests
+# Cluster-specific manifests (generated at runtime)
 *-clusterpackage.yaml
+*/clusterpackage.yaml

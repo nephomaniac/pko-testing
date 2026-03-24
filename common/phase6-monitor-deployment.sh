@@ -23,14 +23,8 @@ echo "Log file: $LOG_FILE"
 echo
 
 # Load configuration
-CONFIG_FILE="$OPERATOR_DIR/config/pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run previous phases first"
-    exit 1
-fi
-
-source "$CONFIG_FILE"
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
 
 # Source shared cluster verification functions
 source "$SCRIPT_DIR/cluster-verification.sh"
@@ -172,6 +166,14 @@ if [ "$MIGRATION_MODE" = "1" ]; then
         echo
         echo "Check the ClusterPackage for cleanup phase status:"
         echo "  oc get clusterpackage configure-alertmanager-operator -o yaml"
+        echo
+        echo "Manual cleanup option:"
+        echo "  Run: ../common/cleanup-olm.sh"
+        echo "  This will show you commands to manually delete OLM artifacts."
+        echo
+        echo "⚠️  IMPORTANT: Remember that when Hive sync is restored/unpaused,"
+        echo "   Hive will likely reinstall the operator using its currently"
+        echo "   configured deployment method (check app-interface config)."
         echo
         read -p "Continue to PKO deployment validation anyway? (y/n): " CONTINUE
         if [ "$CONTINUE" != "y" ]; then
