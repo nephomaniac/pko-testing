@@ -1,0 +1,23 @@
+# PKO Test Configuration - OME
+# User-provided settings (copy this to user-config and edit)
+
+# Container Registry Settings
+IMAGE_REGISTRY=quay.io
+IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
+
+# Cluster Information
+CLUSTER_ID=YOUR_CLUSTER_NAME
+CLUSTER_SERVER=https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443
+CLUSTER_USER=cluster-admin
+
+# Operator Settings
+OPERATOR_NAMESPACE=openshift-osd-metrics-exporter
+
+# Image Tagging
+# Base tag for images (git commit will be appended automatically)
+IMAGE_TAG_BASE=test
+
+
+# Build Settings
+# Path to OME repository (for building images)
+OME_REPO=${OME_REPO:-../osd-metrics-exporter}
