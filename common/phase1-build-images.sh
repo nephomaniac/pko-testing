@@ -204,14 +204,19 @@ if [ -f "$USER_CONFIG" ]; then
     echo "✓ Updated image references in $USER_CONFIG"
 fi
 
+# Set environment variables for runtime state tracking
+export OPERATOR_IMAGE="$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
+export PKO_IMAGE="$IMAGE_REGISTRY/$IMAGE_REPOSITORY/${IMAGE_NAME}-pko:$IMAGE_TAG"
+export IMAGE_TAG="$IMAGE_TAG"
+export GIT_COMMIT_SHORT="$CURRENT_COMMIT"
+export BUILD_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
 # Save runtime state
 source "$SCRIPT_DIR/load-config.sh"
-save_runtime_state "$OPERATOR_DIR" "phase1-build-images" "success" \
-    "OPERATOR_IMAGE=$IMAGE_REGISTRY/$IMAGE_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG" \
-    "PKO_IMAGE=$IMAGE_REGISTRY/$IMAGE_REPOSITORY/${IMAGE_NAME}-pko:$IMAGE_TAG"
+save_runtime_state "$OPERATOR_DIR" "phase1-build-images" "success"
 
 echo
-echo "Configuration saved to runtime state"
+echo "✓ Runtime state saved"
 echo
 
 # Source shared cluster verification functions
