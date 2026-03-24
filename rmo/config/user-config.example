@@ -1,23 +1,49 @@
 # PKO Test Configuration - RMO
 # User-provided settings (copy this to user-config and edit)
 
+# ============================================================================
+# Image Build Settings (Option 1: Build images locally)
+# ============================================================================
+
 # Container Registry Settings
+# Where to push operator images
 IMAGE_REGISTRY=quay.io
 IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
 
-# Cluster Information
-CLUSTER_ID=YOUR_CLUSTER_NAME
-CLUSTER_SERVER=https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443
-CLUSTER_USER=cluster-admin
-
-# Operator Settings
-OPERATOR_NAMESPACE=openshift-route-monitor-operator
-
 # Image Tagging
 # Base tag for images (git commit will be appended automatically)
+# Example: "test" becomes "test-abc1234" where abc1234 is the git short SHA
 IMAGE_TAG_BASE=test
-
 
 # Build Settings
 # Path to RMO repository (for building images)
 RMO_REPO=${RMO_REPO:-../route-monitor-operator}
+
+# ============================================================================
+# Pre-built Images (Option 2: Use existing images - SKIPS BUILD PHASES)
+# ============================================================================
+
+# If you want to use pre-built images (e.g., from Konflux CI), set these:
+# Scripts will validate these are valid PKO images and skip phase1 + phase2
+
+# OPERATOR_IMAGE=quay.io/openshift/route-monitor-operator:v0.1.123
+# PKO_IMAGE=quay.io/openshift/route-monitor-operator-pko:v0.1.123
+
+# Leave commented to build images locally
+# Uncomment and set to use pre-built images
+
+# ============================================================================
+# Cluster Information
+# ============================================================================
+
+# The cluster where you'll test the PKO migration
+CLUSTER_ID=YOUR_CLUSTER_NAME
+CLUSTER_SERVER=https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443
+CLUSTER_USER=cluster-admin
+
+# ============================================================================
+# Operator Settings
+# ============================================================================
+
+# Namespace where RMO is deployed
+OPERATOR_NAMESPACE=openshift-route-monitor-operator

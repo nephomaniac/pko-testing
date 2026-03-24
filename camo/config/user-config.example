@@ -1,6 +1,10 @@
 # PKO Test Configuration - CAMO
 # User-provided settings (copy this to user-config and edit)
 
+# ============================================================================
+# Image Build Settings (Option 1: Build images locally)
+# ============================================================================
+
 # Container Registry Settings
 # Where to push operator images
 IMAGE_REGISTRY=quay.io
@@ -11,17 +15,35 @@ IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
 # Example: "test" becomes "test-abc1234" where abc1234 is the git short SHA
 IMAGE_TAG_BASE=test
 
+# Build Settings
+# Path to CAMO repository (for building images)
+CAMO_REPO=${CAMO_REPO:-../configure-alertmanager-operator}
+
+# ============================================================================
+# Pre-built Images (Option 2: Use existing images - SKIPS BUILD PHASES)
+# ============================================================================
+
+# If you want to use pre-built images (e.g., from Konflux CI), set these:
+# Scripts will validate these are valid PKO images and skip phase1 + phase2
+
+# OPERATOR_IMAGE=quay.io/openshift/configure-alertmanager-operator:v0.1.123
+# PKO_IMAGE=quay.io/openshift/configure-alertmanager-operator-pko:v0.1.123
+
+# Leave commented to build images locally
+# Uncomment and set to use pre-built images
+
+# ============================================================================
 # Cluster Information
+# ============================================================================
+
 # The cluster where you'll test the PKO migration
 CLUSTER_ID=YOUR_CLUSTER_NAME
 CLUSTER_SERVER=https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443
 CLUSTER_USER=cluster-admin
 
+# ============================================================================
 # Operator Settings
+# ============================================================================
+
 # Namespace where CAMO is deployed
 OPERATOR_NAMESPACE=openshift-monitoring
-
-# Build Settings
-# Path to CAMO repository (for building images)
-# Can be set here or via environment variable
-CAMO_REPO=${CAMO_REPO:-../configure-alertmanager-operator}
