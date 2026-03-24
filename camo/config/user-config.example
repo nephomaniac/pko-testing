@@ -16,7 +16,7 @@ IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
 IMAGE_TAG_BASE=test
 
 # Build Settings
-# Path to CAMO repository (for building images)
+# Path to CAMO repository (for building images and accessing templates)
 CAMO_REPO=${CAMO_REPO:-../configure-alertmanager-operator}
 
 # ============================================================================

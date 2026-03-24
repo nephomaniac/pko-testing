@@ -24,14 +24,8 @@ echo "Log file: $LOG_FILE"
 echo
 
 # Load configuration
-CONFIG_FILE="$OPERATOR_DIR/config/pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run previous phases first"
-    exit 1
-fi
-
-source "$CONFIG_FILE"
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
 
 # Source shared cluster verification functions
 source "$SCRIPT_DIR/cluster-verification.sh"
@@ -124,7 +118,7 @@ echo "===================================="
 echo
 
 echo "Checking for Package Operator..."
-if ! oc get deployment -n package-operator-system package-operator-manager &>/dev/null; then
+if ! oc get deployment -n openshift-package-operator package-operator-manager &>/dev/null; then
     echo "ERROR: Package Operator not found on cluster"
     echo "PKO must be installed before deploying CAMO via ClusterPackage"
     exit 1
@@ -133,7 +127,7 @@ fi
 echo "✓ Package Operator is running"
 echo
 
-PKO_VERSION=$(oc get deployment -n package-operator-system package-operator-manager \
+PKO_VERSION=$(oc get deployment -n openshift-package-operator package-operator-manager \
   -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
 echo "Package Operator image: $PKO_VERSION"
 echo
@@ -154,7 +148,53 @@ echo
 
 MANIFEST_FILE="$OPERATOR_DIR/clusterpackage.yaml"
 
-cat > "$MANIFEST_FILE" << EOF
+# Determine operator repository path
+OPERATOR_REPO_PATH=""
+if [ -n "$CAMO_REPO" ]; then
+    OPERATOR_REPO_PATH="$CAMO_REPO"
+elif [ -n "$RMO_REPO" ]; then
+    OPERATOR_REPO_PATH="$RMO_REPO"
+elif [ -n "$OME_REPO" ]; then
+    OPERATOR_REPO_PATH="$OME_REPO"
+fi
+
+# Check if we can use operator's ClusterPackage template
+TEMPLATE_PATH="$OPERATOR_REPO_PATH/hack/pko/clusterpackage.yaml"
+if [ -n "$OPERATOR_REPO_PATH" ] && [ -f "$TEMPLATE_PATH" ]; then
+    echo "Using operator's ClusterPackage template: $TEMPLATE_PATH"
+    echo
+
+    # Extract image repository and tag from full image URIs
+    # PKO_IMAGE format: quay.io/maclark/configure-alertmanager-operator-pko:test-afae58f
+    REPO_NAME=$(basename "$OPERATOR_REPO_PATH")
+    PKO_IMAGE_REPO=$(echo "$PKO_IMAGE" | cut -d':' -f1)
+    IMAGE_TAG=$(echo "$PKO_IMAGE" | cut -d':' -f2)
+    OPERATOR_IMAGE_REPO=$(echo "$OPERATOR_IMAGE" | cut -d':' -f1)
+    FEDRAMP="${FEDRAMP:-false}"
+
+    # Extract ClusterPackage from template and substitute variables
+    # The template has the ClusterPackage nested in a SelectorSyncSet
+    # We extract lines 39-49 (the ClusterPackage object) and remove leading spaces/dash
+    sed -n '39,49p' "$TEMPLATE_PATH" | \
+        sed 's/^        - //' | \
+        sed 's/^          //' | \
+        sed "s/\${REPO_NAME}/$REPO_NAME/g" | \
+        sed "s|\${PKO_IMAGE}:\${IMAGE_TAG}|$PKO_IMAGE|g" | \
+        sed "s|\${OPERATOR_IMAGE}:\${IMAGE_TAG}|$OPERATOR_IMAGE|g" | \
+        sed "s/\${FEDRAMP}/$FEDRAMP/g" > "$MANIFEST_FILE"
+
+    echo "✓ Generated ClusterPackage from operator template"
+    echo "  Template variables substituted:"
+    echo "    REPO_NAME: $REPO_NAME"
+    echo "    PKO_IMAGE: $PKO_IMAGE"
+    echo "    OPERATOR_IMAGE: $OPERATOR_IMAGE"
+    echo "    FEDRAMP: $FEDRAMP"
+else
+    echo "⚠️  Operator template not found, using built-in ClusterPackage"
+    echo
+
+    # Fallback: generate ClusterPackage directly
+    cat > "$MANIFEST_FILE" << EOF
 apiVersion: package-operator.run/v1alpha1
 kind: ClusterPackage
 metadata:
@@ -167,6 +207,7 @@ spec:
     image: ${OPERATOR_IMAGE}
     fedramp: "false"
 EOF
+fi
 
 echo "ClusterPackage manifest created:"
 echo "  File: $MANIFEST_FILE"
@@ -201,7 +242,8 @@ echo
 
 # Record deployment start time
 DEPLOY_START_TIME=$(date +%s)
-echo "DEPLOY_START_TIME=$DEPLOY_START_TIME" >> "$CONFIG_FILE"
+CLUSTERPACKAGE_NAME=configure-alertmanager-operator
+CLUSTERPACKAGE_MANIFEST=$MANIFEST_FILE
 
 # Confirm with cluster context before applying
 if confirm_operation "APPLY CLUSTERPACKAGE" \
@@ -261,6 +303,10 @@ fi
 
 echo
 echo "Next step: Run phase6-monitor-deployment.sh to watch the deployment progress"
+
+# Save runtime state
+save_runtime_state "$OPERATOR_DIR" "phase5-deploy-pko" "success"
+
 echo
 echo "Phase 5 completed at: $(date)"
 echo "Log saved to: $LOG_FILE"

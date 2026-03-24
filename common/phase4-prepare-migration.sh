@@ -23,14 +23,8 @@ echo "Log file: $LOG_FILE"
 echo
 
 # Load configuration
-CONFIG_FILE="$OPERATOR_DIR/config/pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run previous phases first"
-    exit 1
-fi
-
-source "$CONFIG_FILE"
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
 
 # Source shared cluster verification functions
 source "$SCRIPT_DIR/cluster-verification.sh"
@@ -93,9 +87,10 @@ if [ "$HAS_SUBSCRIPTION" = false ] && [ "$HAS_CSV" = false ] && [ "$HAS_CATALOGS
         echo "Aborted."
         exit 0
     fi
-    # Save mode to config
-    echo "MIGRATION_MODE=2" >> "$CONFIG_FILE"
-    echo "OLM_CLEANUP_METHOD=none" >> "$CONFIG_FILE"
+    # Save mode to runtime state
+    MIGRATION_MODE=2
+    OLM_CLEANUP_METHOD=none
+    save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
     echo
     echo "Proceeding to Phase 5 (PKO deployment)..."
     echo "Next step: Run phase5-deploy-pko.sh"
@@ -153,9 +148,10 @@ if [ "$MODE_CHOICE" = "1" ]; then
         exit 0
     fi
 
-    # Save mode to config
-    echo "MIGRATION_MODE=1" >> "$CONFIG_FILE"
-    echo "OLM_CLEANUP_METHOD=pko-managed" >> "$CONFIG_FILE"
+    # Save mode to runtime state
+    MIGRATION_MODE=1
+    OLM_CLEANUP_METHOD=pko-managed
+    save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
 
     echo
     echo "Configuration saved."
@@ -180,9 +176,9 @@ elif [ "$MODE_CHOICE" = "2" ]; then
         exit 0
     fi
 
-    # Save mode to config
-    echo "MIGRATION_MODE=2" >> "$CONFIG_FILE"
-    echo "OLM_CLEANUP_METHOD=manual" >> "$CONFIG_FILE"
+    # Save mode to runtime state
+    MIGRATION_MODE=2
+    OLM_CLEANUP_METHOD=manual
 
     echo
     echo "===================================="
@@ -292,6 +288,9 @@ elif [ "$MODE_CHOICE" = "2" ]; then
     else
         echo "✓ Deployment removed by OLM cleanup"
     fi
+
+    # Save mode to runtime state
+    save_runtime_state "$OPERATOR_DIR" "phase4-prepare-migration" "success"
 
     echo
     echo "===================================="

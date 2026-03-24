@@ -16,7 +16,7 @@ IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
 IMAGE_TAG_BASE=test
 
 # Build Settings
-# Path to RMO repository (for building images)
+# Path to RMO repository (for building images and accessing templates)
 RMO_REPO=${RMO_REPO:-../route-monitor-operator}
 
 # ============================================================================

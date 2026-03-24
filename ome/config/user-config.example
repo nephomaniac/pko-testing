@@ -16,7 +16,7 @@ IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
 IMAGE_TAG_BASE=test
 
 # Build Settings
-# Path to OME repository (for building images)
+# Path to OME repository (for building images and accessing templates)
 OME_REPO=${OME_REPO:-../osd-metrics-exporter}
 
 # ============================================================================
