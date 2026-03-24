@@ -56,24 +56,65 @@ echo
 echo "Checking for CAMO resources in openshift-monitoring namespace..."
 echo
 
+# Check for CSV
 echo "CSV (ClusterServiceVersion):"
-oc get csv -n openshift-monitoring | grep configure-alertmanager || echo "  None found"
+CSV_FOUND=false
+CSV_NAME=""
+if CSV_LINE=$(oc get csv -n openshift-monitoring 2>/dev/null | grep configure-alertmanager); then
+    echo "$CSV_LINE"
+    CSV_FOUND=true
+    CSV_NAME=$(echo "$CSV_LINE" | awk '{print $1}')
+else
+    echo "  None found"
+fi
 echo
 
+# Check for Subscription
 echo "Subscription:"
-oc get subscription -n openshift-monitoring | grep configure-alertmanager || echo "  None found"
+SUBSCRIPTION_FOUND=false
+if oc get subscription -n openshift-monitoring configure-alertmanager-operator &>/dev/null; then
+    oc get subscription -n openshift-monitoring | grep configure-alertmanager
+    SUBSCRIPTION_FOUND=true
+else
+    echo "  None found"
+fi
 echo
 
+# Check for CatalogSource
 echo "CatalogSource:"
-oc get catalogsource -n openshift-monitoring | grep configure-alertmanager || echo "  None found"
+CATALOGSOURCE_FOUND=false
+if oc get catalogsource -n openshift-monitoring configure-alertmanager-operator-registry &>/dev/null; then
+    oc get catalogsource -n openshift-monitoring | grep configure-alertmanager
+    CATALOGSOURCE_FOUND=true
+else
+    echo "  None found"
+fi
 echo
 
+# Check for Deployment
 echo "Deployment:"
-oc get deployment -n openshift-monitoring configure-alertmanager-operator 2>/dev/null || echo "  Not found"
+DEPLOYMENT_FOUND=false
+if oc get deployment -n openshift-monitoring configure-alertmanager-operator &>/dev/null; then
+    oc get deployment -n openshift-monitoring configure-alertmanager-operator
+    DEPLOYMENT_FOUND=true
+else
+    echo "  Not found"
+fi
 echo
 
+# Check for Pods
 echo "Pods:"
-oc get pods -n openshift-monitoring | grep configure-alertmanager || echo "  None found"
+PODS_RUNNING=false
+if POD_COUNT=$(oc get pods -n openshift-monitoring 2>/dev/null | grep -c "configure-alertmanager.*Running" || echo 0); then
+    if [ "$POD_COUNT" -gt 0 ]; then
+        oc get pods -n openshift-monitoring | grep configure-alertmanager
+        PODS_RUNNING=true
+    else
+        echo "  None found"
+    fi
+else
+    echo "  None found"
+fi
 echo
 
 # Save current state
@@ -91,7 +132,39 @@ echo "✓ Backup complete"
 echo
 
 echo "===================================="
-echo "Step 3.3: PAUSE HIVE SYNC (MANUAL)"
+echo "Step 3.3: Check Cluster Environment"
+echo "===================================="
+echo
+
+# Get cluster version
+echo "Checking OpenShift version..."
+CLUSTER_VERSION=$(oc get clusterversion version -o jsonpath='{.status.desired.version}' 2>/dev/null || echo "unknown")
+echo "  Version: $CLUSTER_VERSION"
+echo
+
+# Check if PKO is installed
+echo "Checking for Package Operator..."
+PKO_INSTALLED=false
+if oc get deployment -n openshift-package-operator package-operator-manager &>/dev/null; then
+    PKO_VERSION=$(oc get deployment -n openshift-package-operator package-operator-manager -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
+    echo "  ✓ Package Operator installed"
+    echo "  Image: $PKO_VERSION"
+    PKO_INSTALLED=true
+else
+    echo "  ⚠️  Package Operator not found"
+fi
+echo
+
+# Get cluster platform info
+echo "Checking cluster platform..."
+CLUSTER_PLATFORM=$(oc get infrastructure cluster -o jsonpath='{.status.platform}' 2>/dev/null || echo "unknown")
+CLUSTER_REGION=$(oc get infrastructure cluster -o jsonpath='{.status.platformStatus.aws.region}' 2>/dev/null || echo "unknown")
+echo "  Platform: $CLUSTER_PLATFORM"
+echo "  Region: $CLUSTER_REGION"
+echo
+
+echo "===================================="
+echo "Step 3.4: PAUSE HIVE SYNC (MANUAL)"
 echo "===================================="
 echo
 echo "⚠️  You must now pause Hive syncing to this cluster."
@@ -145,9 +218,27 @@ echo "This will resume ALL Hive syncing and redeploy CAMO via OLM."
 echo
 
 # Export variables for runtime state
+
+# Cluster information
 export CLUSTER_ID="$CLUSTER_ID"
+export CLUSTER_VERSION="$CLUSTER_VERSION"
+export CLUSTER_PLATFORM="$CLUSTER_PLATFORM"
+export CLUSTER_REGION="$CLUSTER_REGION"
+
+# Backup information
 export BACKUP_DIR="$BACKUP_DIR"
 export BACKUP_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+# OLM deployment status
+export OLM_CSV_FOUND="$CSV_FOUND"
+export OLM_CSV_NAME="$CSV_NAME"
+export OLM_SUBSCRIPTION_FOUND="$SUBSCRIPTION_FOUND"
+export OLM_CATALOGSOURCE_FOUND="$CATALOGSOURCE_FOUND"
+export OLM_DEPLOYMENT_FOUND="$DEPLOYMENT_FOUND"
+export OLM_PODS_RUNNING="$PODS_RUNNING"
+
+# Environment checks
+export PKO_INSTALLED="$PKO_INSTALLED"
 export HIVE_PAUSED=true
 
 # Save runtime state

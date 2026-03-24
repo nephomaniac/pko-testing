@@ -113,6 +113,31 @@ EOF
     cat >> "$runtime_state" << EOF
 
 # ============================================================================
+# Pre-Migration State (OLM)
+# ============================================================================
+EOF
+
+    # Save OLM deployment status
+    [ -n "$OLM_CSV_FOUND" ] && echo "OLM_CSV_FOUND=$OLM_CSV_FOUND" >> "$runtime_state"
+    [ -n "$OLM_CSV_NAME" ] && echo "OLM_CSV_NAME=$OLM_CSV_NAME" >> "$runtime_state"
+    [ -n "$OLM_SUBSCRIPTION_FOUND" ] && echo "OLM_SUBSCRIPTION_FOUND=$OLM_SUBSCRIPTION_FOUND" >> "$runtime_state"
+    [ -n "$OLM_CATALOGSOURCE_FOUND" ] && echo "OLM_CATALOGSOURCE_FOUND=$OLM_CATALOGSOURCE_FOUND" >> "$runtime_state"
+    [ -n "$OLM_DEPLOYMENT_FOUND" ] && echo "OLM_DEPLOYMENT_FOUND=$OLM_DEPLOYMENT_FOUND" >> "$runtime_state"
+    [ -n "$OLM_PODS_RUNNING" ] && echo "OLM_PODS_RUNNING=$OLM_PODS_RUNNING" >> "$runtime_state"
+
+    cat >> "$runtime_state" << EOF
+
+# ============================================================================
+# Environment Checks
+# ============================================================================
+EOF
+
+    # Save environment status
+    [ -n "$PKO_INSTALLED" ] && echo "PKO_INSTALLED=$PKO_INSTALLED" >> "$runtime_state"
+
+    cat >> "$runtime_state" << EOF
+
+# ============================================================================
 # Migration Configuration
 # ============================================================================
 EOF
