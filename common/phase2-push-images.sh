@@ -4,6 +4,23 @@ set -e
 # Phase 2: Push CAMO PKO Images to Quay
 # This script pushes both images to your personal Quay repository
 
+# Parse command-line arguments
+AUTO_CONFIRM=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --auto-confirm)
+            AUTO_CONFIRM=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--auto-confirm]"
+            exit 1
+            ;;
+    esac
+done
+
 echo "===================================="
 echo "Phase 2: Push Images to Quay"
 echo "===================================="
@@ -16,6 +33,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Load configuration from phase 1
 source "$SCRIPT_DIR/load-config.sh"
 load_config "$OPERATOR_DIR"
+
+# Extract repository and image name for Quay URLs
+IMAGE_REPOSITORY=$(echo "$OPERATOR_IMAGE" | cut -d'/' -f2)
+IMAGE_NAME=$(echo "$OPERATOR_IMAGE" | cut -d'/' -f3 | cut -d':' -f1)
 
 echo "Configuration loaded:"
 echo "  Operator Image: $OPERATOR_IMAGE"
@@ -51,10 +72,12 @@ else
 fi
 echo
 
-read -p "Push images to Quay.io? (y/n): " CONFIRM
-if [ "$CONFIRM" != "y" ]; then
-    echo "Aborted."
-    exit 0
+if [ "$AUTO_CONFIRM" = false ]; then
+    read -p "Push images to Quay.io? (y/n): " CONFIRM
+    if [ "$CONFIRM" != "y" ]; then
+        echo "Aborted."
+        exit 0
+    fi
 fi
 
 echo
@@ -89,6 +112,9 @@ fi
 
 echo "✓ PKO package image pushed successfully"
 echo
+
+# Save runtime state
+save_runtime_state "$OPERATOR_DIR" "phase2-push-images" "success"
 
 echo "===================================="
 echo "Push Complete!"
