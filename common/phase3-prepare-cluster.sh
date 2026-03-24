@@ -49,18 +49,18 @@ verify_cluster "Phase 3 start"
 
 echo
 echo "===================================="
-echo "Step 3.2: Check Current CAMO Deployment (OLM)"
+echo "Step 3.2: Check Current OLM Deployment"
 echo "===================================="
 echo
 
-echo "Checking for CAMO resources in openshift-monitoring namespace..."
+echo "Checking for ${OPERATOR_NAME} resources in ${OPERATOR_NAMESPACE} namespace..."
 echo
 
 # Check for CSV
 echo "CSV (ClusterServiceVersion):"
 CSV_FOUND=false
 CSV_NAME=""
-if CSV_LINE=$(oc get csv -n openshift-monitoring 2>/dev/null | grep configure-alertmanager); then
+if CSV_LINE=$(oc get csv -n "$OPERATOR_NAMESPACE" 2>/dev/null | grep "$CSV_NAME_PATTERN"); then
     echo "$CSV_LINE"
     CSV_FOUND=true
     CSV_NAME=$(echo "$CSV_LINE" | awk '{print $1}')
@@ -72,8 +72,8 @@ echo
 # Check for Subscription
 echo "Subscription:"
 SUBSCRIPTION_FOUND=false
-if oc get subscription -n openshift-monitoring configure-alertmanager-operator &>/dev/null; then
-    oc get subscription -n openshift-monitoring | grep configure-alertmanager
+if oc get subscription -n "$OPERATOR_NAMESPACE" "$SUBSCRIPTION_NAME" &>/dev/null; then
+    oc get subscription -n "$OPERATOR_NAMESPACE" | grep "$OPERATOR_RESOURCE_PREFIX"
     SUBSCRIPTION_FOUND=true
 else
     echo "  None found"
@@ -83,8 +83,8 @@ echo
 # Check for CatalogSource
 echo "CatalogSource:"
 CATALOGSOURCE_FOUND=false
-if oc get catalogsource -n openshift-monitoring configure-alertmanager-operator-registry &>/dev/null; then
-    oc get catalogsource -n openshift-monitoring | grep configure-alertmanager
+if oc get catalogsource -n "$OPERATOR_NAMESPACE" "$CATALOGSOURCE_NAME" &>/dev/null; then
+    oc get catalogsource -n "$OPERATOR_NAMESPACE" | grep "$OPERATOR_RESOURCE_PREFIX"
     CATALOGSOURCE_FOUND=true
 else
     echo "  None found"
@@ -94,8 +94,8 @@ echo
 # Check for Deployment
 echo "Deployment:"
 DEPLOYMENT_FOUND=false
-if oc get deployment -n openshift-monitoring configure-alertmanager-operator &>/dev/null; then
-    oc get deployment -n openshift-monitoring configure-alertmanager-operator
+if oc get deployment -n "$OPERATOR_NAMESPACE" "$OPERATOR_NAME" &>/dev/null; then
+    oc get deployment -n "$OPERATOR_NAMESPACE" "$OPERATOR_NAME"
     DEPLOYMENT_FOUND=true
 else
     echo "  Not found"
@@ -105,9 +105,9 @@ echo
 # Check for Pods
 echo "Pods:"
 PODS_RUNNING=false
-if POD_COUNT=$(oc get pods -n openshift-monitoring 2>/dev/null | grep -c "configure-alertmanager.*Running" || echo 0); then
+if POD_COUNT=$(oc get pods -n "$OPERATOR_NAMESPACE" 2>/dev/null | grep -c "${OPERATOR_RESOURCE_PREFIX}.*Running" || echo 0); then
     if [ "$POD_COUNT" -gt 0 ]; then
-        oc get pods -n openshift-monitoring | grep configure-alertmanager
+        oc get pods -n "$OPERATOR_NAMESPACE" | grep "$OPERATOR_RESOURCE_PREFIX"
         PODS_RUNNING=true
     else
         echo "  None found"
@@ -121,12 +121,12 @@ echo
 BACKUP_DIR="$OPERATOR_DIR/backups/backup-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-echo "Backing up current CAMO resources to: $BACKUP_DIR"
+echo "Backing up current ${OPERATOR_NAME} resources to: $BACKUP_DIR"
 
-oc get csv -n openshift-monitoring -o yaml | grep -A 9999 "configure-alertmanager" > "$BACKUP_DIR/csv.yaml" 2>/dev/null || true
-oc get subscription -n openshift-monitoring configure-alertmanager-operator -o yaml > "$BACKUP_DIR/subscription.yaml" 2>/dev/null || true
-oc get catalogsource -n openshift-monitoring configure-alertmanager-operator-registry -o yaml > "$BACKUP_DIR/catalogsource.yaml" 2>/dev/null || true
-oc get deployment -n openshift-monitoring configure-alertmanager-operator -o yaml > "$BACKUP_DIR/deployment.yaml" 2>/dev/null || true
+oc get csv -n "$OPERATOR_NAMESPACE" -o yaml | grep -A 9999 "$CSV_NAME_PATTERN" > "$BACKUP_DIR/csv.yaml" 2>/dev/null || true
+oc get subscription -n "$OPERATOR_NAMESPACE" "$SUBSCRIPTION_NAME" -o yaml > "$BACKUP_DIR/subscription.yaml" 2>/dev/null || true
+oc get catalogsource -n "$OPERATOR_NAMESPACE" "$CATALOGSOURCE_NAME" -o yaml > "$BACKUP_DIR/catalogsource.yaml" 2>/dev/null || true
+oc get deployment -n "$OPERATOR_NAMESPACE" "$OPERATOR_NAME" -o yaml > "$BACKUP_DIR/deployment.yaml" 2>/dev/null || true
 
 echo "✓ Backup complete"
 echo
@@ -248,8 +248,9 @@ echo "===================================="
 echo "Preparation Complete!"
 echo "===================================="
 echo
+echo "Operator: $OPERATOR_NAME"
 echo "Cluster: $CLUSTER_ID"
-echo "Current CAMO deployment: OLM-based"
+echo "Current deployment: OLM-based"
 echo "Backup location: $BACKUP_DIR"
 echo "Hive sync: PAUSED"
 echo

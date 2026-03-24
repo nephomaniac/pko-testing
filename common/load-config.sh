@@ -7,11 +7,30 @@ load_config() {
     local operator_dir="${1:-$(pwd)}"
 
     # Paths to config files
+    local operator_config="$operator_dir/config/operator-config"
     local user_config="$operator_dir/config/user-config"
     local runtime_state="$operator_dir/config/runtime-state"
 
     # Legacy config file (for backwards compatibility)
     local legacy_config="$operator_dir/config/pko-test-config"
+
+    # Load operator-specific configuration (required)
+    if [ -f "$operator_config" ]; then
+        echo "Loading operator config: $operator_config"
+        source "$operator_config"
+    else
+        echo "ERROR: Operator config not found: $operator_config"
+        echo
+        echo "Create it from the example:"
+        echo "  cp $operator_dir/config/operator-config.example $operator_config"
+        echo "  nano $operator_config"
+        echo
+        echo "This file contains operator-specific values like:"
+        echo "  - OPERATOR_NAME, OPERATOR_NAMESPACE"
+        echo "  - SUBSCRIPTION_NAME, CATALOGSOURCE_NAME"
+        echo "  - PKO_CLUSTERROLEBINDINGS, etc."
+        exit 1
+    fi
 
     # Load user configuration
     if [ -f "$user_config" ]; then

@@ -45,12 +45,12 @@ echo "Step 8.1: Delete ClusterPackage"
 echo "===================================="
 echo
 
-if oc get clusterpackage configure-alertmanager-operator &>/dev/null; then
+if oc get clusterpackage "$CLUSTERPACKAGE_NAME" &>/dev/null; then
     if confirm_operation "DELETE CLUSTERPACKAGE" \
-        "oc delete clusterpackage configure-alertmanager-operator"; then
+        "oc delete clusterpackage $CLUSTERPACKAGE_NAME"; then
 
-        echo "Deleting ClusterPackage..."
-        oc delete clusterpackage configure-alertmanager-operator
+        echo "Deleting ClusterPackage: $CLUSTERPACKAGE_NAME"
+        oc delete clusterpackage "$CLUSTERPACKAGE_NAME"
 
         echo "Waiting for PKO to clean up resources..."
         sleep 10
@@ -61,7 +61,7 @@ if oc get clusterpackage configure-alertmanager-operator &>/dev/null; then
         exit 0
     fi
 else
-    echo "⚠️  ClusterPackage not found"
+    echo "⚠️  ClusterPackage not found: $CLUSTERPACKAGE_NAME"
 fi
 
 echo
@@ -74,14 +74,14 @@ echo
 echo "Checking for remaining PKO-managed resources..."
 echo
 
-if oc get deployment configure-alertmanager-operator -n openshift-monitoring &>/dev/null; then
-    echo "  ⚠️  Deployment still exists"
+if oc get deployment "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE" &>/dev/null; then
+    echo "  ⚠️  Deployment still exists: $OPERATOR_NAME"
     read -p "Manually delete deployment? (y/n): " DELETE_DEPLOY
     if [ "$DELETE_DEPLOY" = "y" ]; then
         if confirm_operation "DELETE DEPLOYMENT (MANUAL CLEANUP)" \
-            "oc delete deployment configure-alertmanager-operator -n openshift-monitoring"; then
+            "oc delete deployment $OPERATOR_NAME -n $OPERATOR_NAMESPACE"; then
 
-            oc delete deployment configure-alertmanager-operator -n openshift-monitoring
+            oc delete deployment "$OPERATOR_NAME" -n "$OPERATOR_NAMESPACE"
             echo "  ✓ Deployment deleted"
         else
             echo "  Skipped deployment deletion"
@@ -91,17 +91,21 @@ else
     echo "  ✓ Deployment removed"
 fi
 
-if oc get clusterrole configure-alertmanager-operator &>/dev/null; then
-    echo "  ⚠️  ClusterRole still exists"
-else
-    echo "  ✓ ClusterRole removed"
-fi
+# Check all PKO ClusterRoles
+for role in $PKO_CLUSTERROLES; do
+    if oc get clusterrole "$role" &>/dev/null; then
+        echo "  ⚠️  ClusterRole still exists: $role"
+    fi
+done
 
-if oc get clusterrolebinding configure-alertmanager-operator &>/dev/null; then
-    echo "  ⚠️  ClusterRoleBinding still exists"
-else
-    echo "  ✓ ClusterRoleBinding removed"
-fi
+# Check all PKO ClusterRoleBindings
+for binding in $PKO_CLUSTERROLEBINDINGS; do
+    if oc get clusterrolebinding "$binding" &>/dev/null; then
+        echo "  ⚠️  ClusterRoleBinding still exists: $binding"
+    fi
+done
+
+echo "  ✓ Cleanup verification complete"
 
 echo
 
@@ -109,7 +113,7 @@ echo "===================================="
 echo "Step 8.3: Restore Hive Sync (MANUAL)"
 echo "===================================="
 echo
-echo "To restore the OLM-based CAMO deployment, you must resume Hive sync."
+echo "To restore the ${OPERATOR_NAME} (OLM), you must resume Hive sync."
 echo
 echo "In a SEPARATE terminal/backplane session connected to the HIVE cluster, run:"
 echo
@@ -118,7 +122,7 @@ echo "  oc annotate clusterdeployment <clusterDeploymentName> \\"
 echo "    -n <namespace> \\"
 echo "    hive.openshift.io/syncset-pause-"
 echo
-echo "This will resume ALL Hive syncing and redeploy CAMO via OLM."
+echo "This will resume ALL Hive syncing and redeploy ${OPERATOR_NAME} via OLM."
 echo
 echo "===================================="
 echo
@@ -127,7 +131,7 @@ read -p "Have you resumed the Hive sync? (y/n): " HIVE_CONFIRM
 if [ "$HIVE_CONFIRM" != "y" ]; then
     echo
     echo "Remember to resume Hive sync when ready!"
-    echo "The cluster will not have CAMO running until Hive sync is restored."
+    echo "The cluster will not have ${OPERATOR_NAME} running until Hive sync is restored."
 else
     echo
     echo "===================================="

@@ -1,0 +1,83 @@
+# Operator-Specific Configuration Template
+# Copy this file to operator-config and customize for your operator
+
+# ============================================================================
+# Operator Identity
+# ============================================================================
+
+# Operator name (used in Deployment, ServiceAccount, etc.)
+OPERATOR_NAME=your-operator-name
+
+# Namespace where operator is deployed
+OPERATOR_NAMESPACE=openshift-monitoring
+
+# Common prefix used in resource names
+OPERATOR_RESOURCE_PREFIX=your-operator
+
+# ============================================================================
+# OLM Resources
+# ============================================================================
+
+# ClusterServiceVersion name pattern (for grep matching)
+CSV_NAME_PATTERN=your-operator-name
+
+# Subscription name
+SUBSCRIPTION_NAME=your-operator-name
+
+# CatalogSource name
+CATALOGSOURCE_NAME=your-operator-name-registry
+
+# OperatorGroup name (if operator-specific, leave empty for shared)
+OPERATORGROUP_NAME=""
+
+# ============================================================================
+# PKO Resources
+# ============================================================================
+
+# ClusterPackage name
+CLUSTERPACKAGE_NAME=your-operator-name
+
+# ClusterRoleBindings created by PKO (space-separated list)
+PKO_CLUSTERROLEBINDINGS="your-operator-binding1 your-operator-binding2"
+
+# ClusterRoles created by PKO (space-separated list)
+PKO_CLUSTERROLES="your-operator-role1 your-operator-role2"
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+
+# Base image name (without registry/repository)
+IMAGE_NAME=your-operator-name
+
+# PKO package image suffix (appended to IMAGE_NAME)
+PKO_IMAGE_SUFFIX=-pko
+
+# ============================================================================
+# Repository Paths
+# ============================================================================
+
+# Path to ClusterPackage template within the operator repo
+CLUSTERPACKAGE_TEMPLATE_PATH=hack/pko/clusterpackage.yaml
+
+# ============================================================================
+# Examples
+# ============================================================================
+#
+# CAMO (configure-alertmanager-operator):
+#   OPERATOR_NAME=configure-alertmanager-operator
+#   OPERATOR_NAMESPACE=openshift-monitoring
+#   SUBSCRIPTION_NAME=configure-alertmanager-operator
+#   CATALOGSOURCE_NAME=configure-alertmanager-operator-registry
+#
+# RMO (route-monitor-operator):
+#   OPERATOR_NAME=route-monitor-operator
+#   OPERATOR_NAMESPACE=openshift-monitoring
+#   SUBSCRIPTION_NAME=route-monitor-operator
+#   CATALOGSOURCE_NAME=route-monitor-operator-registry
+#
+# OME (osd-metrics-exporter):
+#   OPERATOR_NAME=osd-metrics-exporter
+#   OPERATOR_NAMESPACE=openshift-osd-metrics
+#   SUBSCRIPTION_NAME=osd-metrics-exporter
+#   CATALOGSOURCE_NAME=osd-metrics-exporter-registry

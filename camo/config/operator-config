@@ -1,0 +1,75 @@
+# Operator-Specific Configuration
+# This file contains all operator-specific values for testing scripts
+
+# ============================================================================
+# Operator Identity
+# ============================================================================
+
+# Operator name (used in Deployment, ServiceAccount, etc.)
+OPERATOR_NAME=configure-alertmanager-operator
+
+# Namespace where operator is deployed
+OPERATOR_NAMESPACE=openshift-monitoring
+
+# Common prefix used in resource names
+OPERATOR_RESOURCE_PREFIX=configure-alertmanager
+
+# ============================================================================
+# OLM Resources
+# ============================================================================
+
+# ClusterServiceVersion name pattern (for grep matching)
+# The actual CSV name includes version: configure-alertmanager-operator.v0.1.822-gee71669
+CSV_NAME_PATTERN=configure-alertmanager-operator
+
+# Subscription name
+SUBSCRIPTION_NAME=configure-alertmanager-operator
+
+# CatalogSource name
+CATALOGSOURCE_NAME=configure-alertmanager-operator-registry
+
+# OperatorGroup name (if operator-specific, otherwise leave empty for shared)
+# CAMO uses the existing openshift-monitoring OperatorGroup
+OPERATORGROUP_NAME=""
+
+# ============================================================================
+# PKO Resources
+# ============================================================================
+
+# ClusterPackage name
+CLUSTERPACKAGE_NAME=configure-alertmanager-operator
+
+# ClusterRoleBindings created by PKO (space-separated list)
+# These need to be cleaned up during OLM to PKO migration
+PKO_CLUSTERROLEBINDINGS="configure-alertmanager-operator-prom configure-alertmanager-operator-view configure-alertmanager-operator-edit"
+
+# ClusterRoles created by PKO (space-separated list)
+PKO_CLUSTERROLES="configure-alertmanager-operator-view configure-alertmanager-operator-edit"
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+
+# Base image name (without registry/repository)
+IMAGE_NAME=configure-alertmanager-operator
+
+# PKO package image suffix (appended to IMAGE_NAME)
+PKO_IMAGE_SUFFIX=-pko
+
+# ============================================================================
+# Repository Paths
+# ============================================================================
+
+# Path to operator git repository (set by user-config or prompted)
+# CAMO_REPO=/path/to/configure-alertmanager-operator
+
+# Path to ClusterPackage template within the operator repo
+CLUSTERPACKAGE_TEMPLATE_PATH=hack/pko/clusterpackage.yaml
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - This file is operator-specific and should be customized for each operator
+# - For RMO, create rmo/config/operator-config with RMO-specific values
+# - For OME, create ome/config/operator-config with OME-specific values
+# - Scripts will load this file automatically when run from operator directory
