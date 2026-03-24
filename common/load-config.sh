@@ -120,6 +120,7 @@ EOF
     # Save migration variables
     [ -n "$MIGRATION_MODE" ] && echo "MIGRATION_MODE=$MIGRATION_MODE" >> "$runtime_state"
     [ -n "$OLM_CLEANUP_METHOD" ] && echo "OLM_CLEANUP_METHOD=$OLM_CLEANUP_METHOD" >> "$runtime_state"
+    [ -n "$HIVE_PAUSED" ] && echo "HIVE_PAUSED=$HIVE_PAUSED" >> "$runtime_state"
 
     cat >> "$runtime_state" << EOF
 

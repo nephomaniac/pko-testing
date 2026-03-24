@@ -26,30 +26,26 @@ echo
 source "$SCRIPT_DIR/cluster-verification.sh"
 
 echo "===================================="
-echo "Cluster Setup and Verification"
+echo "Step 3.1: Verify Cluster Connection"
 echo "===================================="
 echo
 
-# Prompt for cluster info
-read -p "Enter cluster ID or name: " CLUSTER_ID
+# Check if already have cluster ID from config
 if [ -z "$CLUSTER_ID" ]; then
-    echo "ERROR: Cluster ID is required"
-    exit 1
+    read -p "Enter cluster ID or name: " CLUSTER_ID_INPUT
+    if [ -z "$CLUSTER_ID_INPUT" ]; then
+        echo "ERROR: Cluster ID is required"
+        exit 1
+    fi
+    CLUSTER_ID="$CLUSTER_ID_INPUT"
+    echo
 fi
 
-echo
-echo "Verifying connection to cluster: $CLUSTER_ID"
-echo
-
-# Save cluster info (including UUID) to config
-save_cluster_info "$CLUSTER_ID" "$CONFIG_FILE"
+echo "Target cluster: $CLUSTER_ID"
 echo
 
-# Reload config with new cluster info
-source "$CONFIG_FILE"
-
-# Verify we're on the correct cluster
-verify_cluster "Phase 3 start - after cluster ID entry"
+# Verify we're connected to the correct cluster
+verify_cluster "Phase 3 start"
 
 echo
 echo "===================================="
@@ -148,6 +144,15 @@ echo
 echo "This will resume ALL Hive syncing and redeploy CAMO via OLM."
 echo
 
+# Export variables for runtime state
+export CLUSTER_ID="$CLUSTER_ID"
+export BACKUP_DIR="$BACKUP_DIR"
+export BACKUP_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+export HIVE_PAUSED=true
+
+# Save runtime state
+save_runtime_state "$OPERATOR_DIR" "phase3-prepare-cluster" "success"
+
 echo "===================================="
 echo "Preparation Complete!"
 echo "===================================="
@@ -157,4 +162,4 @@ echo "Current CAMO deployment: OLM-based"
 echo "Backup location: $BACKUP_DIR"
 echo "Hive sync: PAUSED"
 echo
-echo "Next step: Run phase4-remove-olm.sh"
+echo "Next step: Run phase4-prepare-migration.sh"
