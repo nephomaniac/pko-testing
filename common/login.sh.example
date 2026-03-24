@@ -1,0 +1,7 @@
+#!/bin/bash
+# Example cluster login script
+# Copy this to login.sh and fill in your cluster details
+
+oc login https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443 \
+  --username cluster-admin \
+  --password YOUR_CLUSTER_ADMIN_PASSWORD

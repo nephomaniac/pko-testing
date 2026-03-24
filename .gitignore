@@ -1,0 +1,21 @@
+# Configuration files (contain cluster-specific data)
+*/config/*.camo-pko-test-config
+!*/config/*.example
+
+# Log files
+*/logs/*
+!*/logs/.gitkeep
+
+# Backup files
+*/backups/*
+!*/backups/.gitkeep
+
+# macOS
+.DS_Store
+
+# Runtime files
+*.log
+login.sh
+
+# Cluster-specific manifests
+*-clusterpackage.yaml

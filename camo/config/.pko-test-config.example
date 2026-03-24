@@ -1,0 +1,23 @@
+# PKO Test Configuration - CAMO
+# Copy this file to .camo-pko-test-config and fill in your values
+
+# Container registry settings
+IMAGE_REGISTRY=quay.io
+IMAGE_REPOSITORY=YOUR_QUAY_USERNAME
+IMAGE_NAME=configure-alertmanager-operator
+IMAGE_TAG=test-YOUR_GIT_SHA
+
+# Computed image URIs (will be auto-generated from above)
+OPERATOR_IMAGE=${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
+PKO_IMAGE=${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}-pko:${IMAGE_TAG}
+
+# Cluster configuration
+CLUSTER_ID=YOUR_CLUSTER_NAME
+CLUSTER_SERVER=https://api.YOUR_CLUSTER_NAME.YOUR_DOMAIN:6443
+CLUSTER_USER=cluster-admin
+CLUSTER_UUID=
+
+# Migration settings (set by phase4-prepare-migration.sh)
+# MIGRATION_MODE=1  # 1=PKO-managed cleanup, 2=manual cleanup
+# OLM_CLEANUP_METHOD=pko-managed  # or 'manual'
+# DEPLOY_START_TIME=1234567890
