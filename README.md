@@ -23,7 +23,7 @@ pko-testing/
 │   └── run-all-phases.sh        # Run all phases
 ├── camo/                        # CAMO configuration
 │   ├── config/
-│   │   └── .pko-test-config.example
+│   │   └── pko-test-config.example
 │   ├── logs/                    # Execution logs
 │   └── backups/                 # Resource backups
 ├── rmo/                         # RMO configuration
@@ -42,8 +42,8 @@ cd camo/  # or rmo/, ome/
 ### 2. Setup Config
 
 ```bash
-cp config/.pko-test-config.example config/.pko-test-config
-nano config/.pko-test-config
+cp config/pko-test-config.example config/pko-test-config
+nano config/pko-test-config
 ```
 
 ### 3. Run Migration
@@ -65,7 +65,7 @@ Each operator directory contains only:
 - **logs/** - Execution logs
 - **backups/** - Resource backups
 
-Common scripts read config from `./config/.pko-test-config` in the current directory.
+Common scripts read config from `./config/pko-test-config` in the current directory.
 
 ## Adding New Operator
 
@@ -75,10 +75,10 @@ mkdir -p newoperator/{config,logs,backups}
 touch newoperator/{config,logs,backups}/.gitkeep
 
 # Copy config template from existing operator
-cp camo/config/.pko-test-config.example newoperator/config/
+cp camo/config/pko-test-config.example newoperator/config/
 
 # Edit for your operator
-nano newoperator/config/.pko-test-config
+nano newoperator/config/pko-test-config
 
 # Run from operator directory
 cd newoperator

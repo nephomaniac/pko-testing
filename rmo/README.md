@@ -6,8 +6,8 @@ Route Monitor Operator (RMO) migration from OLM to PKO.
 
 1. Copy config from CAMO as template:
    ```bash
-   cp ../camo/config/.pko-test-config.example config/.pko-test-config
-   nano config/.pko-test-config
+   cp ../camo/config/pko-test-config.example config/pko-test-config
+   nano config/pko-test-config
    ```
 
 2. Update operator-specific values:

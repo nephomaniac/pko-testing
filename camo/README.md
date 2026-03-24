@@ -8,8 +8,8 @@ Configure Alertmanager Operator (CAMO) migration from OLM to PKO.
 
 ```bash
 # From this directory (camo/)
-cp config/.pko-test-config.example config/.pko-test-config
-nano config/.pko-test-config
+cp config/pko-test-config.example config/pko-test-config
+nano config/pko-test-config
 ```
 
 **Edit these values**:
@@ -24,7 +24,7 @@ nano config/.pko-test-config
 
 ```bash
 export CAMO_REPO=/path/to/configure-alertmanager-operator
-# Or edit config/.pko-test-config
+# Or edit config/pko-test-config
 ```
 
 ### 3. Run Migration

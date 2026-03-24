@@ -1,5 +1,5 @@
 # Configuration files (contain cluster-specific data)
-*/config/*.camo-pko-test-config
+*/config/pko-test-config
 !*/config/*.example
 
 # Log files

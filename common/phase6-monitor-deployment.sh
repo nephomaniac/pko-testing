@@ -23,7 +23,7 @@ echo "Log file: $LOG_FILE"
 echo
 
 # Load configuration
-CONFIG_FILE="$OPERATOR_DIR/config/.pko-test-config"
+CONFIG_FILE="$OPERATOR_DIR/config/pko-test-config"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "ERROR: Configuration file not found: $CONFIG_FILE"
     echo "Please run previous phases first"
