@@ -181,7 +181,7 @@ if [ -n "$OPERATOR_REPO_PATH" ] && [ -f "$TEMPLATE_PATH" ]; then
         sed "s/\${REPO_NAME}/$REPO_NAME/g" | \
         sed "s|\${PKO_IMAGE}:\${IMAGE_TAG}|$PKO_IMAGE|g" | \
         sed "s|\${OPERATOR_IMAGE}:\${IMAGE_TAG}|$OPERATOR_IMAGE|g" | \
-        sed "s/\${FEDRAMP}/$FEDRAMP/g" > "$MANIFEST_FILE"
+        sed "s/\${FEDRAMP}/\"$FEDRAMP\"/g" > "$MANIFEST_FILE"
 
     echo "✓ Generated ClusterPackage from operator template"
     echo "  Template variables substituted:"
