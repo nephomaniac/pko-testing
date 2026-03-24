@@ -9,15 +9,13 @@ echo "Phase 2: Push Images to Quay"
 echo "===================================="
 echo
 
-# Load configuration from phase 1
-CONFIG_FILE="$(cd "$(dirname "$0")" && pwd)/.camo-pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run phase1-build-images.sh first"
-    exit 1
-fi
+# Script runs from operator directory (camo/, rmo/, etc.)
+OPERATOR_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-source "$CONFIG_FILE"
+# Load configuration from phase 1
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
 
 echo "Configuration loaded:"
 echo "  Operator Image: $OPERATOR_IMAGE"

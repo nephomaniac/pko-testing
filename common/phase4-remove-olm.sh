@@ -9,20 +9,15 @@ echo "Phase 4: Remove OLM Artifacts"
 echo "===================================="
 echo
 
-# Load configuration
-CONFIG_FILE="$(cd "$(dirname "$0")" && pwd)/.camo-pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run previous phases first"
-    exit 1
-fi
-
-source "$CONFIG_FILE"
-
-# Source shared cluster verification functions
 # Script runs from operator directory (camo/, rmo/, etc.)
 OPERATOR_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Load configuration
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
+
+# Source shared cluster verification functions
 source "$SCRIPT_DIR/cluster-verification.sh"
 
 echo "===================================="

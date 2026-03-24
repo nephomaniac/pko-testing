@@ -9,15 +9,13 @@ echo "Phase 3: Prepare Test Cluster"
 echo "===================================="
 echo
 
-# Load configuration
-CONFIG_FILE="$(cd "$(dirname "$0")" && pwd)/.camo-pko-test-config"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Configuration file not found: $CONFIG_FILE"
-    echo "Please run phase1-build-images.sh first"
-    exit 1
-fi
+# Script runs from operator directory (camo/, rmo/, etc.)
+OPERATOR_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-source "$CONFIG_FILE"
+# Load configuration
+source "$SCRIPT_DIR/load-config.sh"
+load_config "$OPERATOR_DIR"
 
 echo "Configuration loaded:"
 echo "  Operator Image: $OPERATOR_IMAGE"
@@ -25,9 +23,6 @@ echo "  PKO Package Image: $PKO_IMAGE"
 echo
 
 # Source shared cluster verification functions
-# Script runs from operator directory (camo/, rmo/, etc.)
-OPERATOR_DIR="$(pwd)"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/cluster-verification.sh"
 
 echo "===================================="
