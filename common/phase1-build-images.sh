@@ -81,19 +81,22 @@ cd "$CAMO_REPO"
 echo "Working directory: $(pwd)"
 echo
 
-# Prompt for Quay username if not provided
-if [ -z "$QUAY_USERNAME" ]; then
-    read -p "Enter your Quay.io username: " QUAY_USERNAME
+# Check if IMAGE_REPOSITORY is already set from config
+if [ -z "$IMAGE_REPOSITORY" ]; then
+    # Prompt for Quay username if not provided
     if [ -z "$QUAY_USERNAME" ]; then
-        echo "ERROR: Quay username is required"
-        exit 1
+        read -p "Enter your Quay.io username: " QUAY_USERNAME
+        if [ -z "$QUAY_USERNAME" ]; then
+            echo "ERROR: Quay username is required"
+            exit 1
+        fi
     fi
+    export IMAGE_REPOSITORY="$QUAY_USERNAME"
 fi
 
-# Set image variables
-export IMAGE_REGISTRY="quay.io"
-export IMAGE_REPOSITORY="$QUAY_USERNAME"
-export IMAGE_NAME="configure-alertmanager-operator"
+# Set image variables (use defaults if not already set from config)
+export IMAGE_REGISTRY="${IMAGE_REGISTRY:-quay.io}"
+export IMAGE_NAME="${IMAGE_NAME:-configure-alertmanager-operator}"
 
 # Get git commit info for versioning
 CURRENT_COMMIT=$(git rev-parse --short=7 HEAD)

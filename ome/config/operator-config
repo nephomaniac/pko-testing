@@ -1,0 +1,126 @@
+# Operator-Specific Configuration
+# This file contains all operator-specific values for testing scripts
+
+# ============================================================================
+# Operator Identity
+# ============================================================================
+
+# Operator name (used in Deployment, ServiceAccount, etc.)
+OPERATOR_NAME=osd-metrics-exporter
+
+# Namespace where operator is deployed
+OPERATOR_NAMESPACE=openshift-osd-metrics
+
+# Common prefix used in resource names
+OPERATOR_RESOURCE_PREFIX=osd-metrics-exporter
+
+# ============================================================================
+# OLM Resources
+# ============================================================================
+
+# ClusterServiceVersion name pattern (for grep matching)
+# The actual CSV name includes version: osd-metrics-exporter.v0.1.x-gXXXXXXX
+CSV_NAME_PATTERN=osd-metrics-exporter
+
+# Subscription name
+SUBSCRIPTION_NAME=osd-metrics-exporter
+
+# CatalogSource name
+CATALOGSOURCE_NAME=osd-metrics-exporter-registry
+
+# OperatorGroup name (if operator-specific, otherwise leave empty for shared)
+# OME creates its own OperatorGroup
+OPERATORGROUP_NAME=osd-metrics-exporter
+
+# ============================================================================
+# PKO Resources
+# ============================================================================
+
+# ClusterPackage name
+CLUSTERPACKAGE_NAME=osd-metrics-exporter
+
+# ClusterRoleBindings created by PKO (space-separated list)
+# These need to be cleaned up during OLM to PKO migration
+PKO_CLUSTERROLEBINDINGS="osd-metrics-exporter-watch-clusterscope"
+
+# ClusterRoles created by PKO (space-separated list)
+PKO_CLUSTERROLES="osd-metrics-exporter-watch-clusterscope"
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+
+# Base image name (without registry/repository)
+IMAGE_NAME=osd-metrics-exporter
+
+# PKO package image suffix (appended to IMAGE_NAME)
+PKO_IMAGE_SUFFIX=-pko
+
+# ============================================================================
+# OLM Production Images (for deploy-olm-from-quay.sh)
+# ============================================================================
+
+# Production image repositories (for users who don't want to build locally)
+# These are the official production images in Red Hat registries
+# Uncomment to use pre-built production images
+
+# CatalogSource registry image (with digest)
+# Update the digest to match the version you want to test
+OLM_REGISTRY_IMAGE="quay.io/app-sre/osd-metrics-exporter-registry@sha256:29cde28a5ec3e5cc2b542e30c2ccabefb187fa78f375252f7ab7d0936adbe9fa"
+
+# Operator image repository (for reference)
+# The actual image is deployed by OLM from the CatalogSource
+OLM_OPERATOR_IMAGE_REPO="quay.io/app-sre/osd-metrics-exporter"
+
+# PKO package image repository
+# Used when deploying via PKO without local build
+PKO_IMAGE_REPO="quay.io/redhat-services-prod/openshift/osd-metrics-exporter-pko"
+
+# OLM channel
+OLM_CHANNEL="staging"
+
+# Path to OLM template within operator repo
+OLM_TEMPLATE_PATH="hack/olm-registry/olm-artifacts-template.yaml"
+
+# ============================================================================
+# Default Production Image Tags (Updated: 2026-03-24)
+# ============================================================================
+#
+# Latest verified production images:
+#   OLM Registry: quay.io/app-sre/osd-metrics-exporter-registry@sha256:29cde28a5ec3e5cc2b542e30c2ccabefb187fa78f375252f7ab7d0936adbe9fa
+#   OLM Operator: quay.io/app-sre/osd-metrics-exporter:v0.1.483-gf3edcbc
+#   PKO Package:  quay.io/redhat-services-prod/openshift/osd-metrics-exporter-pko:latest
+#   PKO Package:  quay.io/redhat-services-prod/openshift/osd-metrics-exporter-pko:f6b94de
+#
+# To use production images in user-config:
+#   PKO_IMAGE=quay.io/redhat-services-prod/openshift/osd-metrics-exporter-pko:latest
+#
+# To build locally, configure user-config with:
+#   IMAGE_REGISTRY=quay.io
+#   IMAGE_REPOSITORY=your-username
+#   OME_REPO=/path/to/osd-metrics-exporter
+
+# ============================================================================
+# Repository Paths
+# ============================================================================
+
+# Path to operator git repository (set by user-config or prompted)
+# OME_REPO=/path/to/osd-metrics-exporter
+
+# Path to ClusterPackage template within the operator repo
+CLUSTERPACKAGE_TEMPLATE_PATH=hack/pko/clusterpackage.yaml
+
+# ============================================================================
+# CRD Configuration
+# ============================================================================
+
+# Custom Resource Definition managed by this operator
+# OME doesn't have CRDs - it's a metrics collector
+OPERATOR_CRD=""
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - OSD Metrics Exporter collects cluster metrics and exports them
+# - No CRDs - uses built-in Kubernetes APIs
+# - Namespace: openshift-osd-metrics (not openshift-osd-metrics-exporter)
