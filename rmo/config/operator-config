@@ -1,0 +1,121 @@
+# Operator-Specific Configuration
+# This file contains all operator-specific values for testing scripts
+
+# ============================================================================
+# Operator Identity
+# ============================================================================
+
+# Operator name (used in Deployment, ServiceAccount, etc.)
+OPERATOR_NAME=route-monitor-operator-controller-manager
+
+# Namespace where operator is deployed
+OPERATOR_NAMESPACE=openshift-route-monitor-operator
+
+# Common prefix used in resource names
+OPERATOR_RESOURCE_PREFIX=route-monitor-operator
+
+# ============================================================================
+# OLM Resources
+# ============================================================================
+
+# ClusterServiceVersion name pattern (for grep matching)
+CSV_NAME_PATTERN=route-monitor-operator
+
+# Subscription name
+SUBSCRIPTION_NAME=route-monitor-operator
+
+# CatalogSource name
+CATALOGSOURCE_NAME=route-monitor-operator-registry
+
+# OperatorGroup name (if operator-specific, otherwise leave empty for shared)
+OPERATORGROUP_NAME=route-monitor-operator
+
+# ============================================================================
+# PKO Resources
+# ============================================================================
+
+# ClusterPackage name
+CLUSTERPACKAGE_NAME=route-monitor-operator
+
+# ClusterRoleBindings created by PKO (space-separated list)
+PKO_CLUSTERROLEBINDINGS="route-monitor-operator-manager-rolebinding"
+
+# ClusterRoles created by PKO (space-separated list)
+PKO_CLUSTERROLES="route-monitor-operator-manager-role"
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+
+# Base image name (without registry/repository)
+IMAGE_NAME=route-monitor-operator
+
+# PKO package image suffix (appended to IMAGE_NAME)
+PKO_IMAGE_SUFFIX=-pko
+
+# ============================================================================
+# OLM Production Images (for deploy-olm-from-quay.sh)
+# ============================================================================
+
+# Production image repositories (for users who don't want to build locally)
+# These are the official production images in Red Hat registries
+# Uncomment to use pre-built production images
+
+# CatalogSource registry image (with digest - update to match desired version)
+# Check current deployment: oc get catalogsource -n openshift-route-monitor-operator -o yaml
+OLM_REGISTRY_IMAGE="quay.io/app-sre/route-monitor-operator-registry:staging-4548bfb"
+
+# Operator image repository (for reference)
+OLM_OPERATOR_IMAGE_REPO="quay.io/app-sre/route-monitor-operator"
+
+# PKO package image repository
+PKO_IMAGE_REPO="quay.io/redhat-services-prod/openshift/route-monitor-operator-pko"
+
+# OLM channel
+OLM_CHANNEL="staging"
+
+# Path to OLM template within operator repo
+OLM_TEMPLATE_PATH="hack/olm-registry/olm-artifacts-template.yaml"
+
+# ============================================================================
+# Default Production Image Tags (Updated: 2026-03-24)
+# ============================================================================
+#
+# Latest verified production images:
+#   OLM Registry: quay.io/app-sre/route-monitor-operator-registry:staging-4548bfb
+#   OLM Operator: quay.io/app-sre/route-monitor-operator:v0.1.957-g4548bfb
+#   PKO Package:  quay.io/redhat-services-prod/openshift/route-monitor-operator-pko:latest
+#   PKO Package:  quay.io/redhat-services-prod/openshift/route-monitor-operator-pko:4548bfb
+#
+# To use production images in user-config:
+#   PKO_IMAGE=quay.io/redhat-services-prod/openshift/route-monitor-operator-pko:latest
+#
+# To build locally, configure user-config with:
+#   IMAGE_REGISTRY=quay.io
+#   IMAGE_REPOSITORY=your-username
+#   RMO_REPO=/path/to/route-monitor-operator
+
+# ============================================================================
+# Repository Paths
+# ============================================================================
+
+# Path to operator git repository (set by user-config or prompted)
+# RMO_REPO=/path/to/route-monitor-operator
+
+# Path to ClusterPackage template within the operator repo
+CLUSTERPACKAGE_TEMPLATE_PATH=hack/pko/clusterpackage.yaml
+
+# ============================================================================
+# CRD Configuration
+# ============================================================================
+
+# Custom Resource Definitions managed by this operator
+OPERATOR_CRD="clusterurlmonitors.monitoring.openshift.io routemonitors.monitoring.openshift.io"
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - Route Monitor Operator monitors route availability using blackbox-exporter
+# - Has CRDs for RouteMonitor and ClusterURLMonitor
+# - Includes cleanup phases in PKO package (cleanup-rbac, cleanup-deploy)
+# - Namespace: openshift-route-monitor-operator
